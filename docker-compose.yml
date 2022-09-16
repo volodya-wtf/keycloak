@@ -37,7 +37,7 @@ services:
       DB_SCHEMA: public
       DB_PASSWORD: ${KEYCLOAK_PG_PASSWORD}
       PROXY_ADDRESS_FORWARDING: "true"
-      KEYCLOAK_FRONTEND_URL: https://localhost/auth
+      KEYCLOAK_FRONTEND_URL: https://${HOST}/auth
       KEYCLOAK_USER: ${KEYCLOAK_USER}
       KEYCLOAK_PASSWORD: ${KEYCLOAK_PASSWORD}
     restart: unless-stopped
