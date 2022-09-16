@@ -20,7 +20,7 @@ CLIENT_SECRET= config("CLIENT_SECRET")
 def auth(request: Request, token: str):
     oauth = OAuth2Session(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
     result = oauth.introspect_token(
-        url=f"https://172.19.0.2/auth/realms/{REALM}/protocol/openid-connect/token/introspect", token=token, verify=False)
+        url=f"https://nginx_reverse_proxy/auth/realms/{REALM}/protocol/openid-connect/token/introspect", token=token, verify=False)
     content = json.loads(result.content.decode())
     
     # Если не можем произвести интроспекцию для токена -> 401
