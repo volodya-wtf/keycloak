@@ -1,0 +1,78 @@
+version: '3'
+
+networks:
+  docker_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
+
+volumes:
+  keycloak_postgres:
+    external: True
+
+services:
+
+  nginx_reverse_proxy:
+    image: nginx:1.21.5
+    container_name: nginx_reverse_proxy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    networks:
+      docker_network:
+        ipv4_address: 172.19.0.2
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/cert:/etc/nginx/cert
+
+  keycloak_main:
+    image: jboss/keycloak:latest
+    container_name: keycloak_main
+    environment:
+      DB_VENDOR: postgres
+      DB_ADDR: keycloak_postgres
+      DB_DATABASE: ${KEYCLOAK_PG_DATABASE}
+      DB_USER: ${KEYCLOAK_PG_USERNAME}
+      DB_SCHEMA: public
+      DB_PASSWORD: ${KEYCLOAK_PG_PASSWORD}
+      PROXY_ADDRESS_FORWARDING: "true"
+      KEYCLOAK_FRONTEND_URL: https://localhost/auth
+      KEYCLOAK_USER: ${KEYCLOAK_USER}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_PASSWORD}
+    restart: unless-stopped
+    networks:
+      docker_network:
+        ipv4_address: 172.19.0.3
+    expose:
+      - 8080
+    
+  keycloak_postgres:
+    image: postgres:14
+    container_name: keycloak_postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${KEYCLOAK_PG_PASSWORD}
+      POSTGRES_USER: ${KEYCLOAK_PG_USERNAME}
+      POSTGRES_DB: ${KEYCLOAK_PG_DATABASE}
+    networks:
+      docker_network:
+        ipv4_address: 172.19.0.4
+    expose:
+      - "5432"
+    volumes:
+      - keycloak_postgres:/var/lib/postgresql/data
+        
+  backend:
+    build: 
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: backend
+    networks:
+      docker_network:
+        ipv4_address: 172.19.0.5
+    expose:
+      - "8000"
+
+        
+
